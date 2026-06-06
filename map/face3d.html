@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+
+<body>
+<script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    const s = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
+    camera.position.z = 2.2;
+
+    const rend = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    rend.setSize(window.innerWidth, window.innerHeight);
+    rend.setPixelRatio(window.devicePixelRatio);
+    rend.setClearColor(0x000000, 0);
+    document.body.appendChild(rend.domElement);
+
+    let headimage = null;
+
+    const loader = new GLTFLoader();
+    loader.load(
+        "models/male_base.glb",
+        function(gltf) {
+            headimage = gltf.scene;
+            headimage.scale.set(4.6, 4.6, 4.6);
+            headimage.position.set(0.10, -0.5, 0);
+            headimage.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshBasicMaterial({
+                        color: 0x00eaff,
+                        wireframe: true,
+                        transparent: true,
+                        opacity: 0.72
+                    });
+                }
+            });
+            s.add(headimage);
+        },
+        undefined,
+        function(err) {
+            console.error('GLB load error:', err);
+        }
+    );
+
+    const rings = [];
+    for (let i = 0; i < 4; i++) {
+        const geo = new THREE.TorusGeometry(0.72 + i * 0.10, 0.005, 8, 120);
+        const mat = new THREE.MeshBasicMaterial({
+            color: 0x00eaff,
+            transparent: true,
+            opacity: 0.30
+        });
+        const ring = new THREE.Mesh(geo, mat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = -0.3;
+        rings.push(ring);
+        s.add(ring);
+    }
+
+    const scanG = new THREE.PlaneGeometry(0.9, 0.018);
+    const scanMat = new THREE.MeshBasicMaterial({
+    color: 0x00ffff,
+    transparent: true,
+    opacity: 0.25,
+    side: THREE.DoubleSide
+});
+const scan = new THREE.Mesh(scanG, scanMat);
+scan.position.z = 0.65;
+s.add(scan);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = performance.now() / 1000;
+
+        if (headimage) {
+            headimage.rotation.y = Math.sin(t * 0.8) * 0.28;
+            headimage.rotation.x = Math.sin(t * 0.5) * 0.08;
+        }
+
+        rings.forEach((r, i) => {
+            r.rotation.z += 0.004 + i * 0.002;
+            r.rotation.y = Math.sin(t * 0.5 + i) * 0.12;
+        });
+
+        scan.position.y = 0 + Math.sin(t * 1.8) * 0.55;
+
+        rend.render(s, camera);
+    }
+
+    animate();
+
+    window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        rend.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+</body>
+</html>

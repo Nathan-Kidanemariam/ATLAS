@@ -1,0 +1,9 @@
+{
+  "jarvis" : {
+    "path": "C:/Users/kingk/PycharmProjects/Jarvis",
+    "apps": ["vscode"],
+    "links": [],
+    "todos" : ["fix map brightness"],
+    "names" : ["main project", "ai assistant", "jarvis project"]
+  }
+}

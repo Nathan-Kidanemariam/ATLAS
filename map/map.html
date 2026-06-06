@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ATLAS Tactical Map</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+
+  <style>
+    html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  overflow: hidden;
+}
+
+   #map {
+  width: 100%;
+  height: 100%;
+  filter:
+    brightness(1.35)
+    contrast(1.7)
+    saturate(0.75)
+    hue-rotate(8deg);
+}
+
+#cityGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 45% 45%, rgba(0, 220, 255, 0.24), transparent 28%),
+    radial-gradient(circle at 65% 60%, rgba(0, 150, 255, 0.18), transparent 30%),
+    radial-gradient(circle at 30% 70%, rgba(0, 255, 200, 0.12), transparent 25%);
+  mix-blend-mode: screen;
+}
+
+#scanGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(0, 210, 255, 0.10) 45%,
+    rgba(160, 255, 255, 0.18) 50%,
+    rgba(0, 210, 255, 0.10) 55%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  animation: scanMove 7s infinite linear;
+}
+
+#vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at center,
+    transparent 35%,
+    rgba(0, 0, 0, 0.35) 70%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+}
+
+@keyframes scanMove {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(60%);
+  }
+}
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(0, 220, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 220, 255, 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mix-blend-mode: screen;
+    }
+
+    #mapGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(0, 220, 255, 0.20),
+      rgba(0, 90, 130, 0.08) 40%,
+      rgba(0, 0, 0, 0.55) 100%
+    );
+
+  mix-blend-mode: screen;
+}
+
+    .pulse {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #8fffff;
+      box-shadow: 0 0 18px #00eaff;
+      border: 2px solid #d9ffff;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <div id="mapGlow"></div>
+  <div id="overlay"></div>
+  <div id="cityGlow"></div>
+  <div id="scanGlow"></div>
+  <div id="vignette"></div>
+
+  <script>
+    const JAWG_KEY = "00knKNt63yb777UjiKzB2HNougcLNWvbaQN9psKTaaR072R3qtuSQ89eoYs31MeH";
+
+    const lat = 38.9897;
+    const lon = -76.9378;
+
+    const map = new maplibregl.Map({
+      container: "map",
+      style: `https://api.jawg.io/styles/jawg-dark.json?access-token=${JAWG_KEY}`,
+      center: [lon, lat],
+      zoom: 14.5,
+      pitch: 62,
+      bearing: -25,
+      attributionControl: false
+    });
+
+    const markerEl = document.createElement("div");
+    markerEl.className = "pulse";
+
+    new maplibregl.Marker({ element: markerEl })
+      .setLngLat([lon, lat])
+      .addTo(map);
+
+    map.on("load", () => {
+      map.easeTo({
+        zoom: 15.2,
+        pitch: 68,
+        bearing: 35,
+        duration: 5000
+      });
+    });
+
+    setInterval(() => {
+      map.easeTo({
+        bearing: map.getBearing() + 8,
+        duration: 4000
+      });
+    }, 4500);
+
+    window.setAtlasState = function(state) {
+  console.log("JARVIS STATE:", state);
+
+  if (state === "SCANNING") {
+    map.easeTo({
+      zoom: 16,
+      pitch: 72,
+      bearing: map.getBearing() + 25,
+      duration: 1200
+    });
+  }
+
+  else if (state === "THINKING") {
+    map.easeTo({
+      pitch: 65,
+      bearing: map.getBearing() + 10,
+      duration: 1400
+    });
+  }
+
+  else if (state === "SPEAKING") {
+    map.easeTo({
+      zoom: 15.3,
+      pitch: 68,
+      duration: 900
+    });
+  }
+
+  else if (state === "LISTENING") {
+    map.easeTo({
+      zoom: 15,
+      pitch: 62,
+      duration: 900
+    });
+  }
+
+  else {
+    map.easeTo({
+      zoom: 14.5,
+      pitch: 58,
+      duration: 1400
+    });
+  }
+};
+
+    window.handleGesture = function(x, y, pinching) {
+    if(!pinching){
+       return
+    }
+    map.easeTo({bearing: map.getBearing() + x * 180, zoom: Math.max(10, Math.min(19, map.getZoom()-y*10)), duration: 90}); };
+  </script>
+</body>
+</html>
