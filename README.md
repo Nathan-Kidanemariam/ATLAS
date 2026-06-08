@@ -111,7 +111,7 @@ git clone YOUR_REPO_LINK
 Install packages:
 
 ```bash
-pip install pygame requests python-dotenv groq opencv-python mediapipe ultralytics pillow pyautogui pyperclip pytesseract edge-tts pyttsx3 spotipy speechrecognition psutil bottle maplibre
+pip install -r requirements.txt
 ```
 
 Run:
