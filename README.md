@@ -73,6 +73,7 @@ Object detection and analysis.
 
 FOCUS  
 Minimal workspace mode.
+
 ---
 
 ## States
