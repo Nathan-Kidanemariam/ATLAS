@@ -63,6 +63,8 @@ class WeatherService:
                 "longitude": self.longitude,
                 "current": "temperature_2m,precipitation,wind_speed_10m",
                 "temperature_unit": "fahrenheit",
+                "daily": "temperature_2m_max," "temperature_2m_min," "precipitation_sum",
+                "forecast_days": 2,
                 "wind_speed_unit": "mph",
                 "timezone": "auto"
             }
@@ -75,13 +77,26 @@ class WeatherService:
             #Get only the current weather section
             current = data["current"]
 
+            daily = data["daily"]
+            tomorrow = {
+                "high":
+                    round(daily["temperature_2m_max"][1]),
+
+                "low":
+                    round(daily["temperature_2m_min"][1]),
+
+                "rain":
+                    daily["precipitation_sum"][1]
+            }
+
             #Save the weather to reduce how many requests are made
             self.cached_weather = {
                 "location": self.location_name,
                 "temperature": round(current["temperature_2m"]),
                 "precipitation": current["precipitation"],
                 "wind": round(current["wind_speed_10m"]),
-                "updated": current["time"]
+                "updated": current["time"],
+                "tomorrow": tomorrow
             }
 
             #Keep track of the last update
@@ -101,5 +116,6 @@ class WeatherService:
                 "temperature": "--",
                 "precipitation": "--",
                 "wind": "--",
-                "updated": "Unavailable"
+                "updated": "Unavailable",
+                "tomorrow": "---"
             }

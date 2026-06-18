@@ -2,6 +2,9 @@ import os
 import webbrowser
 import subprocess
 
+import pyautogui
+
+
 class DesktopService:
     """
     Handles any desktop commands for ATLAS
@@ -135,3 +138,17 @@ class DesktopService:
         webbrowser.open("https://stackoverflow.com")
         webbrowser.open("https://github.com")
         return "Coding Tabs Opened"
+
+    def close_tabs(self):
+        try:
+            pyautogui.hotkey("ctrl", "shift", "w")
+            return "Closing active window."
+
+        except Exception as e:
+            print("[Desktop Error]", e)
+            return "I could not close the window."
+
+    def google_image_search(self, query):
+        url = "https://www.google.com/search?tbm=isch&q=" + query.replace(" ", "+")
+        webbrowser.open(url)
+        return f"Opening image ideas for {query}."

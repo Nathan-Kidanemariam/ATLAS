@@ -82,6 +82,7 @@ class CommandCenter:
 
         #Clean the command first
         command = command.lower().strip()
+        print(command)
 
         #Check each word as a full word match
         for word in words:
@@ -149,9 +150,54 @@ class CommandCenter:
 
         # Weather and time commands
         if self.has_words(command, ["weather", "temperature", "forecast"]):
-            return self.weather_response()
+            return self.weather_response(command)
         if self.has_words(command, ["time", "current time"]):
             return self.time_response()
+
+        if "open coding setup" in command:
+            return self.workspace.launch("atlas")
+
+        if command.startswith("open my ") and "project" in command:
+            proj_name = command.replace("open my ", "").replace("project", "").strip()
+            return self.workspace.launch(proj_name)
+
+        if command.startswith("launch ") and "workspace" in command:
+            proj_name = command.replace("launch ", "").replace("workspace ", "").strip()
+            return self.workspace.launch(proj_name)
+
+        if command.startswith("remember this project as "):
+            name = command.replace("remember this project as ", "", 1).strip()
+            folder = os.getcwd()
+            return self.workspace.add_workspace(name, folder)
+
+        if command.startswith("list my projects"):
+            return self.workspace.find_projs()
+
+        if command.startswith("add note"):
+            parts = command.replace("add note", "", 1).split(" to ")
+
+            if len(parts) == 2:
+                todo = parts[0].strip()
+                name = parts[1].strip()
+                return self.workspace.add_todo(name, todo)
+
+        if command.startswith("what are my ") and " todos" in command:
+            workspace_name = command.replace("what are my ", "", 1).replace(" todos", "").strip()
+            return self.workspace.get_todos(workspace_name)
+
+        if command.startswith("clear ") and " todos" in command:
+            workspace_name = command.replace("clear ", "", 1).replace(" todos", "").strip()
+            return self.workspace.clear_list(workspace_name)
+
+        if command.startswith("continue "):
+            name = command.replace("continue ", "", 1).strip()
+            launcher = self.workspace.launch(name)
+            todo_list = self.workspace.get_todos(name)
+
+            return f"{launcher}{todo_list}"
+
+        if "open spotify" in command:
+            self.spotify.play_random_playlist()
 
         # Open websites or applications
         if command.startswith("open "):
@@ -194,49 +240,6 @@ class CommandCenter:
 
         if "what do you remember" in command:
             return self.memory.get_summary()
-
-        # Coding commands
-        if "open coding setup" in command:
-            return self.workspace.launch("jarvis")
-
-        if command.startswith("open my ") and "project" in command:
-            proj_name = command.replace("open my ", "").replace("project", "").strip()
-            return self.workspace.launch(proj_name)
-
-        if command.startswith("launch ") and "workspace" in command:
-            proj_name = command.replace("launch ", "").replace("workspace ", "").strip()
-            return self.workspace.launch(proj_name)
-
-        if command.startswith("remember this project as "):
-            name = command.replace("remember this project as ", "", 1).strip()
-            folder = os.getcwd()
-            return self.workspace.add_workspace(name, folder)
-
-        if command.startswith("list my projects"):
-            return self.workspace.find_projs()
-
-        if command.startswith("add note"):
-            parts = command.replace("add note", "", 1).split(" to ")
-
-            if len(parts) == 2:
-                todo = parts[0].strip()
-                name = parts[1].strip()
-                return self.workspace.add_todo(name, todo)
-
-        if command.startswith("what are my ") and " todos" in command:
-            workspace_name = command.replace("what are my ", "", 1).replace(" todos", "").strip()
-            return self.workspace.get_todos(workspace_name)
-
-        if command.startswith("clear ") and " todos" in command:
-            workspace_name = command.replace("clear ", "", 1).replace(" todos", "").strip()
-            return self.workspace.clear_list(workspace_name)
-
-        if command.startswith("continue "):
-            name = command.replace("continue ", "", 1).strip()
-            launcher = self.workspace.launch(name)
-            todo_list = self.workspace.get_todos(name)
-
-            return f"{launcher}{todo_list}"
 
         # Screen debugging/analyzing commands
         if self.has_words(command, ["explain my screen","summarize my screen","what am i looking at"]):
@@ -297,7 +300,20 @@ class CommandCenter:
                 f"{brightness_response} "
                 "Development environment ready."
             )
+        if self.has_words(command, ["what should i implement", "what should we do", "what should i work on", "What do you think I should implement"]):
+            self.state.set_auto_scroll(True)
 
+            todos = self.workspace.get_todos("atlas")
+
+            return self.ai.ask(
+                f"""
+                The user is working on ATLAS.
+                Current todos: {todos}
+
+                Suggest what they should implement next.
+                Keep it practical and short.
+                """
+            )
         # Live commands
         if "what should we work on" in command or "next task" in command:
             return self.workspace.get_todos("jarvis")
@@ -306,8 +322,20 @@ class CommandCenter:
             task = command.replace("add task", "", 1)
             return self.workspace.add_todo("jarvis", task)
 
+        if "turn on gesture" in text or "activate gesture" in text:
+            response = self.state.window.start_gesture_control()
+
+        elif "turn off gesture" in text or "deactivate gesture" in text:
+            response = self.state.window.stop_gesture_control()
+
         if "start live vision" in command or "turn on live vision" in command:
-            self.vision.start_live_detection()
+            if self.state.window.gesture is None:
+                return "Gesture control needs to be active before live vision."
+
+            self.vision.start_live_detection(
+                self.state.window.gesture.get_latest_frame
+            )
+
             return "Live vision activated."
 
         if "stop live vision" in command or "turn off live vision" in command:
@@ -350,21 +378,89 @@ class CommandCenter:
                 "Returning to normal interface."
             )
 
+        if self.has_words(
+                command,
+                [
+                    "close website",
+                    "exit website",
+                    "close tab",
+                    "exit tab",
+                    "close this",
+                    "close browser"
+                ]
+        ):
+            return self.desktop.close_tabs()
+
+        if "what should i wear" in command:
+            weather = self.weather.get_weather()
+
+            if "tomorrow" in command:
+                weather_focus = weather.get("tomorrow", {})
+                day = "tomorrow"
+            else:
+                weather_focus = weather
+                day = "today"
+
+            prompt = f"""
+            You are ATLAS helping the user choose an outfit.
+
+            The user asked:
+            {command}
+
+            Weather for {day}:
+            {weather_focus}
+
+            Give:
+            1. A short outfit recommendation.
+            2. A Google Images search phrase.
+
+            Rules:
+            - Keep it modest, clean, and realistic.
+            - Use the weather data.
+            - The search phrase should be short.
+            - Format exactly like this:
+
+            OUTFIT:
+            your outfit recommendation here
+
+            SEARCH:
+            search phrase here
+            """
+
+            answer = self.ai.ask(prompt)
+
+            search = ""
+
+            if "SEARCH:" in answer:
+                search = answer.split("SEARCH:", 1)[1].strip().splitlines()[0]
+
+            search += "male"
+
+            if search:
+                self.desktop.google_image_search(search)
+
+            return answer
+
+
         # General AI response
         return self.ai.ask(
             text,
             context=self.memory.get_summary()
         )
 
-
-    def weather_response(self):
-        """
-        Creates the weather response
-        Gets current weather data and turns it
-        into a simple spoken sentence
-        :return:
-        """
+    def weather_response(self, command):
         weather = self.weather.get_weather()
+
+        if "tomorrow" in command:
+            tomorrow = weather["tomorrow"]
+
+            return (
+                f"Tomorrow in {weather['location']}, the high will be "
+                f"{tomorrow['high']} degrees and the low will be "
+                f"{tomorrow['low']} degrees, with about "
+                f"{tomorrow['rain']} inches of rain."
+            )
+
         return (
             f"It is currently {weather['temperature']} degrees in "
             f"{weather['location']}, with wind around {weather['wind']} miles per hour."

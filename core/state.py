@@ -41,6 +41,7 @@ class JarvisState:
         self.current = self.IDLE
         self.scan_results = []
         self.scan_time = 0
+        self.auto_scroll = False
 
     def set(self, state):
         """
@@ -127,3 +128,9 @@ class JarvisState:
         :return:
         """
         self.current = self.FOCUS
+
+    def set_auto_scroll(self, value):
+        self.auto_scroll = value
+
+    def get_auto_scroll(self):
+        return self.auto_scroll

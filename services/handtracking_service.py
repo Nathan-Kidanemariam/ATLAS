@@ -68,6 +68,7 @@ class HandTrackingService:
         cap = cv2.VideoCapture(0)
 
         if not cap.isOpened():
+            print("[Gesture] Camera could not open")
             return
 
         # Set camera size for consistent tracking

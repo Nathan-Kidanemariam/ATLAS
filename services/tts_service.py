@@ -7,7 +7,7 @@ import os
 import pygame
 import edge_tts
 import pyttsx3
-
+from services.scroll_service import ScrollService
 
 class TTSService:
     """
@@ -46,6 +46,9 @@ class TTSService:
 
         #Voice used by Edge TTS
         self.voice = "en-GB-RyanNeural"
+
+        # Controls auto scrolling while speaking
+        self.scroll = ScrollService()
 
         #Start pygame mixer if it is not already running
         if not pygame.mixer.get_init():
@@ -89,6 +92,13 @@ class TTSService:
             #Set ATLAS to speaking mode
             self.state.set("SPEAKING")
 
+            if getattr(self.state, "auto_scroll", False):
+                threading.Thread(
+                    target=self.scroll.follow_tts,
+                    args=(self,),
+                    daemon=True
+                ).start()
+
             try:
                 #Try online Edge TTS first
                 asyncio.run(self._speak_edge(text))
@@ -98,6 +108,7 @@ class TTSService:
                 self.speak_fallback(text)
 
             self.is_speaking = False
+            self.state.auto_scroll = False
 
             #Set ATLAS back to idle after it finishes speaking
             self.state.set("IDLE")

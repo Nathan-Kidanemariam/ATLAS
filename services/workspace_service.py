@@ -2,6 +2,7 @@ import difflib
 import json
 import os
 import subprocess
+import time
 import webbrowser
 
 class WorkspaceService:
@@ -77,6 +78,22 @@ class WorkspaceService:
             if "vscode" in app:
                 subprocess.Popen(f'code "{folder_path}"', shell=True)
             subprocess.Popen(f'explorer "{folder_path}"', shell=True)
+
+        startup = work_s.get("startup_file")
+
+        if startup:
+            file_path = os.path.join(folder_path, startup)
+
+            time.sleep(5)
+            subprocess.Popen(
+                f'code "{folder_path}" -g "{file_path}"',
+                shell=True
+            )
+        else:
+            subprocess.Popen(
+                f'code "{folder_path}"',
+                shell=True
+            )
 
         #Open saved project links
         for link in links:

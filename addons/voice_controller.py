@@ -68,8 +68,8 @@ class VoiceController:
         with self.mic as source:
             self.recognizer.adjust_for_ambient_noise(source)
 
-        wake_words = self.wake_words
-        activated = False
+        # wake_words = self.wake_words
+        # activated = False
 
         #Start in standby mode
         self.state.set("STANDBY")
@@ -92,19 +92,19 @@ class VoiceController:
                 text = self.recognizer.recognize_google(audio).lower()
 
                 # Wake word mode
-                if not activated:
-                    if any(word in text for word in wake_words):
-                        activated = True
-                        self.state.set("LISTENING")
-
-                        self.tts.speak("Yes?")
-
-                        while self.tts.is_speaking:
-                            time.sleep(0.1)
-                    else:
-                        self.state.set("STANDBY")
-
-                    continue
+                # if not activated:
+                #     if any(word in text for word in wake_words):
+                #         activated = True
+                #         self.state.set("LISTENING")
+                #
+                #         self.tts.speak("Yes?")
+                #
+                #         while self.tts.is_speaking:
+                #             time.sleep(0.1)
+                #     else:
+                #         self.state.set("STANDBY")
+                #
+                #     continue
 
                 # Command mode
                 self.state.set("THINKING")

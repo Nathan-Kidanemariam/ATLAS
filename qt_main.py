@@ -1161,9 +1161,9 @@ class JarvisQtWindow(QMainWindow):
         self.state = JarvisState()
         self.voice = VoiceController(self.state)
         self.voice.window = self
-        intro = self.voice.center.ai.ask("Introduce yourself like JARVIS waking up for the first time, do not refer to the user as master or tony stark, don't use any special characters, and don't be overly silly, you have a strong funny personality and are witty,  Keep it short.")
+        # intro = self.voice.center.ai.ask("Introduce yourself like JARVIS waking up for the first time, do not refer to the user as master or tony stark, don't use any special characters, and don't be overly silly, you have a strong funny personality and are witty,  Keep it short.")
 
-        self.voice.tts.speak(intro)
+        # self.voice.tts.speak(intro)
         self.gesture = None
         self.settings = SettingsService()
         self.state.settings = self.settings
@@ -1287,10 +1287,10 @@ class JarvisQtWindow(QMainWindow):
         """
 
         #Ask AI for the introduction
-        intro = self.voice.center.ai.ask(prompt)
-
-        #Speak the intro
-        self.voice.tts.speak(intro)
+        # intro = self.voice.center.ai.ask(prompt)
+        #
+        # #Speak the intro
+        # self.voice.tts.speak(intro)
 
     def start_gesture_control(self):
         """
